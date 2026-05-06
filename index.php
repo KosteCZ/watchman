@@ -9,119 +9,116 @@ $isAuthenticated = isset($_SESSION['user_id']);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hlídač - Monitoring webu</title>
+    <title>Hlídač - Dashboard</title>
     <style>
         body { font-family: sans-serif; line-height: 1.6; margin: 20px; background: #f4f4f4; }
-        .container { max-width: 800px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        h1 { color: #333; }
+        .container { max-width: 1000px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1 { color: #333; margin-bottom: 5px; }
+        nav { margin-bottom: 20px; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
+        nav a { margin-right: 15px; text-decoration: none; color: #007bff; font-weight: bold; }
+        .product-card { border: 1px solid #ddd; border-radius: 8px; margin-bottom: 30px; overflow: hidden; }
+        .product-header { background: #f8f8f8; padding: 15px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
+        .product-header h2 { margin: 0; color: #333; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #fafafa; font-size: 0.9em; color: #666; }
+        tr:last-child td { border-bottom: none; }
+        .price { font-weight: bold; color: #28a745; font-size: 1.1em; }
+        .store-name { font-weight: bold; }
+        .found-title { color: #666; font-size: 0.9em; }
+        .auth-container { max-width: 400px; margin: 100px auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; }
-        input[type="text"], input[type="email"], input[type="password"] { width: 100%; padding: 8px; box-sizing: border-box; }
-        button { padding: 10px 15px; background: #007bff; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
-        button:hover { background: #0056b3; }
-        .error { color: red; margin-bottom: 15px; }
-        .success { color: green; margin-bottom: 15px; }
-        nav { margin-bottom: 20px; }
-        nav a { margin-right: 15px; text-decoration: none; color: #007bff; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
-        th { background: #f8f8f8; }
-        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8em; }
-        .status-up { background: #d4edda; color: #155724; }
+        input { width: 100%; padding: 10px; box-sizing: border-box; }
+        button { padding: 10px 20px; background: #007bff; color: #fff; border: none; border-radius: 4px; cursor: pointer; width: 100%; }
+        .error { color: red; margin-bottom: 15px; font-size: 0.9em; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Hlídač</h1>
-        
         <?php if ($isAuthenticated): ?>
+            <h1>Hlídač</h1>
             <nav>
-                <span>Přihlášen jako: <strong><?php echo htmlspecialchars($_SESSION['player_name']); ?></strong></span> |
-                <a href="admin.php">Správa sledování</a> |
-                <a href="#" id="logoutBtn">Odhlásit se</a>
+                <a href="index.php" style="color:#333">Dashboard</a>
+                <a href="admin_products.php">Produkty</a>
+                <a href="admin_stores.php">Obchody</a>
+                <a href="#" id="logoutBtn" style="float:right; color:#dc3545">Odhlásit se</a>
             </nav>
 
-            <h2>Vaše sledované položky</h2>
             <div id="dashboard">
                 <?php
-                $targets = getTargets($db, $_SESSION['user_id']);
-                if (empty($targets)): ?>
-                    <p>Zatím nesledujete žádné stránky. <a href="admin.php">Přidat první sledování</a>.</p>
-                <?php else: ?>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Název</th>
-                                <th>Poslední hodnota</th>
-                                <th>Poslední kontrola</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($targets as $target): ?>
+                $products = getProducts($db, $_SESSION['user_id']);
+                if (empty($products)): ?>
+                    <p>Zatím nesledujete žádné produkty. <a href="admin_products.php">Přidat první produkt</a>.</p>
+                <?php else: 
+                    foreach ($products as $p): 
+                        $matches = getProductMatches($db, $p['id']);
+                        // Sort matches by price (basic numeric extraction)
+                        usort($matches, function($a, $b) {
+                            $pa = (float) preg_replace('/[^0-9.]/', '', str_replace(',', '.', $a['last_price']));
+                            $pb = (float) preg_replace('/[^0-9.]/', '', str_replace(',', '.', $b['last_price']));
+                            return $pa <=> $pb;
+                        });
+                ?>
+                    <div class="product-card">
+                        <div class="product-header">
+                            <h2><?php echo htmlspecialchars($p['name']); ?></h2>
+                            <small>Sledováno v <?php echo count($matches); ?> obchodech</small>
+                        </div>
+                        <table>
+                            <thead>
                                 <tr>
-                                    <td><a href="<?php echo htmlspecialchars($target['url']); ?>" target="_blank"><?php echo htmlspecialchars($target['name']); ?></a></td>
-                                    <td><?php echo htmlspecialchars($target['last_value'] ?? 'Zatím nezkontrolováno'); ?></td>
-                                    <td><?php echo $target['last_checked'] ? date('d.m.Y H:i', strtotime($target['last_checked'])) : '-'; ?></td>
+                                    <th>Obchod</th>
+                                    <th>Nalezený produkt</th>
+                                    <th>Cena</th>
+                                    <th>Poslední kontrola</th>
                                 </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                <?php endif; ?>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($matches as $m): ?>
+                                    <tr>
+                                        <td><span class="store-name"><?php echo htmlspecialchars($m['store_name']); ?></span></td>
+                                        <td>
+                                            <a href="<?php echo htmlspecialchars($m['found_url']); ?>" target="_blank" class="found-title">
+                                                <?php echo htmlspecialchars($m['found_title']); ?>
+                                            </a>
+                                        </td>
+                                        <td><span class="price"><?php echo htmlspecialchars($m['last_price']); ?></span></td>
+                                        <td><small><?php echo $m['last_checked'] ? date('d.m.Y H:i', strtotime($m['last_checked'])) : '-'; ?></small></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                                <?php if (empty($matches)): ?>
+                                    <tr><td colspan="4">Zatím nebyly nalezeny žádné výsledky. Spusťte <code>check.php</code>.</td></tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endforeach; endif; ?>
             </div>
 
         <?php else: ?>
-            <div id="authForms">
-                <div id="loginForm">
-                    <h2>Přihlášení</h2>
-                    <div id="loginError" class="error"></div>
-                    <form id="doLogin">
-                        <div class="form-group">
-                            <label>E-mail</label>
-                            <input type="email" name="email" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Heslo</label>
-                            <input type="password" name="password" required>
-                        </div>
-                        <button type="submit">Přihlásit</button>
-                    </form>
-                    <p>Nemáte účet? <a href="#" onclick="showRegister()">Registrovat se</a></p>
-                </div>
-
-                <div id="registerForm" style="display:none;">
-                    <h2>Registrace</h2>
-                    <div id="registerError" class="error"></div>
-                    <form id="doRegister">
-                        <div class="form-group">
-                            <label>Jméno</label>
-                            <input type="text" name="playerName" required>
-                        </div>
-                        <div class="form-group">
-                            <label>E-mail</label>
-                            <input type="email" name="email" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Heslo</label>
-                            <input type="password" name="password" required>
-                        </div>
-                        <button type="submit">Registrovat</button>
-                    </form>
-                    <p>Již máte účet? <a href="#" onclick="showLogin()">Přihlásit se</a></p>
-                </div>
+            <div class="auth-container">
+                <h1>Hlídač - Přihlášení</h1>
+                <div id="loginError" class="error"></div>
+                <form id="doLogin">
+                    <div class="form-group">
+                        <label>E-mail</label>
+                        <input type="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Heslo</label>
+                        <input type="password" name="password" required>
+                    </div>
+                    <button type="submit">Přihlásit se</button>
+                </form>
+                <p style="text-align:center; margin-top:20px; font-size:0.9em;">
+                    Nemáte účet? <a href="#" onclick="alert('Registrace je v této verzi možná pouze přes auth.php nebo ručně v DB.')">Kontaktujte správce</a>
+                </p>
             </div>
         <?php endif; ?>
     </div>
 
     <script>
-        function showRegister() {
-            document.getElementById('loginForm').style.display = 'none';
-            document.getElementById('registerForm').style.display = 'block';
-        }
-        function showLogin() {
-            document.getElementById('loginForm').style.display = 'block';
-            document.getElementById('registerForm').style.display = 'none';
-        }
-
         if (document.getElementById('doLogin')) {
             document.getElementById('doLogin').onsubmit = async (e) => {
                 e.preventDefault();
@@ -130,17 +127,6 @@ $isAuthenticated = isset($_SESSION['user_id']);
                 const data = await res.json();
                 if (data.success) location.reload();
                 else document.getElementById('loginError').innerText = data.error;
-            };
-        }
-
-        if (document.getElementById('doRegister')) {
-            document.getElementById('doRegister').onsubmit = async (e) => {
-                e.preventDefault();
-                const formData = new FormData(e.target);
-                const res = await fetch('auth.php?action=register', { method: 'POST', body: formData });
-                const data = await res.json();
-                if (data.success) location.reload();
-                else document.getElementById('registerError').innerText = data.error;
             };
         }
 
