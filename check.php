@@ -64,12 +64,14 @@ $stores = $db->query("SELECT * FROM stores")->fetchAll(PDO::FETCH_ASSOC);
 
 echo "Starting discovery for " . count($products) . " products across " . count($stores) . " stores...\n";
 
+$pCount = 0;
 foreach ($products as $product) {
-    echo "--- Product: " . $product['name'] . " ---\n";
+    $pCount++;
+    echo "[$pCount/" . count($products) . "] Product: " . $product['name'] . "\n";
     
     foreach ($stores as $store) {
         $searchUrl = $store['search_url_template'] . urlencode($product['name']);
-        echo "Searching in " . $store['name'] . "... ";
+        echo "  - " . $store['name'] . ": ";
         
         // 1. Find the match (Link, Title, Price)
         $priceXpath = cssToXpath($store['price_selector']);
@@ -78,12 +80,14 @@ foreach ($products as $product) {
         
         // Fetch HTML once for all selectors would be better, but our fetchXpath fetches per call.
         // Let's optimize slightly by fetching the whole document once.
-        $urlEscaped = escapeshellarg($searchUrl);
         $userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
-        $html = shell_exec("curl.exe -s -L -A " . escapeshellarg($userAgent) . " " . $urlEscaped);
+        // On Windows, escapeshellarg strips % from URLs. Using manual quoting instead.
+        $command = "curl.exe -s -L --connect-timeout 10 --max-time 30 -A " . escapeshellarg($userAgent) . " \"" . $searchUrl . "\"";
+        $html = shell_exec($command);
         
         if (!$html) {
-            echo "FAILED to fetch search results.\n";
+            // Check if it's really empty or if there was an error
+            echo "FAILED (Empty response for URL: $searchUrl)\n";
             continue;
         }
 
@@ -97,12 +101,17 @@ foreach ($products as $product) {
         
         if ($priceNode && $linkNode && $titleNode) {
             $price = trim($priceNode->textContent);
+            // Clean price: remove non-numeric except spaces and decimal separators
+            $price = preg_replace('/[^\d\s,.]/', '', $price);
+            $price = trim($price);
+            
             $title = trim($titleNode->textContent);
             $url = $linkNode->getAttribute('href');
             
             // Handle relative URLs
             if (strpos($url, 'http') !== 0) {
-                $base = parse_url($store['search_url_template'], PHP_URL_SCHEME) . '://' . parse_url($store['search_url_template'], PHP_URL_HOST);
+                $parsed = parse_url($store['search_url_template']);
+                $base = $parsed['scheme'] . '://' . $parsed['host'];
                 $url = $base . (strpos($url, '/') === 0 ? '' : '/') . $url;
             }
             
@@ -121,8 +130,13 @@ foreach ($products as $product) {
                 $stmt->execute([$product['id'], $store['id'], $title, $url, $price]);
             }
         } else {
-            echo "No result found.\n";
+            if (!$priceNode) echo "Price not found. ";
+            if (!$linkNode) echo "Link not found. ";
+            if (!$titleNode) echo "Title not found. ";
+            echo "\n";
         }
+        // Small delay to be polite to the servers
+        usleep(500000); // 0.5s
     }
 }
 
