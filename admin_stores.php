@@ -21,8 +21,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pSel = $_POST['price_selector'] ?? '';
         $lSel = $_POST['link_selector'] ?? '';
         $tSel = $_POST['title_selector'] ?? '';
+        $aSel = $_POST['availability_selector'] ?? '';
         if ($name && $template) {
-            addStore($db, $userId, $name, $template, $pSel, $lSel, $tSel);
+            addStore($db, $userId, $name, $template, $pSel, $lSel, $tSel, $aSel);
             $message = 'Obchod byl přidán.';
         }
     } elseif ($action === 'update') {
@@ -32,8 +33,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pSel = $_POST['price_selector'] ?? '';
         $lSel = $_POST['link_selector'] ?? '';
         $tSel = $_POST['title_selector'] ?? '';
+        $aSel = $_POST['availability_selector'] ?? '';
         if ($id && $name && $template) {
-            updateStore($db, $id, $userId, $name, $template, $pSel, $lSel, $tSel);
+            updateStore($db, $id, $userId, $name, $template, $pSel, $lSel, $tSel, $aSel);
             $message = 'Obchod byl upraven.';
         }
     } elseif ($action === 'delete') {
@@ -115,6 +117,10 @@ $stores = getStores($db, $userId);
                         <label>Selektor názvu</label>
                         <input type="text" name="title_selector" value="<?php echo htmlspecialchars($editStore['title_selector'] ?? ''); ?>" placeholder=".product-name" required>
                     </div>
+                    <div class="form-group" style="flex:1">
+                        <label>Selektor dostupnosti</label>
+                        <input type="text" name="availability_selector" value="<?php echo htmlspecialchars($editStore['availability_selector'] ?? ''); ?>" placeholder=".stock">
+                    </div>
                 </div>
                 <button type="submit" class="btn-primary"><?php echo $editStore ? 'Uložit změny' : 'Přidat obchod'; ?></button>
                 <?php if ($editStore): ?><a href="admin_stores.php">Zrušit</a><?php endif; ?>
@@ -139,7 +145,8 @@ $stores = getStores($db, $userId);
                     <td>
                         Cena: <code><?php echo htmlspecialchars($s['price_selector']); ?></code><br>
                         Odkaz: <code><?php echo htmlspecialchars($s['link_selector']); ?></code><br>
-                        Název: <code><?php echo htmlspecialchars($s['title_selector']); ?></code>
+                        Název: <code><?php echo htmlspecialchars($s['title_selector']); ?></code><br>
+                        Dostupnost: <code><?php echo htmlspecialchars($s['availability_selector']); ?></code>
                     </td>
                     <td>
                         <a href="admin_stores.php?edit=<?php echo $s['id']; ?>" class="btn-warning">Upravit</a>

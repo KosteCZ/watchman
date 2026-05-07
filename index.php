@@ -7,6 +7,7 @@ $isAuthenticated = isset($_SESSION['user_id']);
 <!DOCTYPE html>
 <html lang="cs">
 <head>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hlídač - Dashboard</title>
@@ -70,6 +71,7 @@ $isAuthenticated = isset($_SESSION['user_id']);
                                 <tr>
                                     <th>Obchod</th>
                                     <th>Nalezený produkt</th>
+                                    <th>Dostupnost</th>
                                     <th>Cena</th>
                                     <th>Poslední kontrola</th>
                                 </tr>
@@ -83,12 +85,13 @@ $isAuthenticated = isset($_SESSION['user_id']);
                                                 <?php echo htmlspecialchars($m['found_title']); ?>
                                             </a>
                                         </td>
+                                        <td><?php echo htmlspecialchars($m['availability']); ?></td>
                                         <td><span class="price"><?php echo htmlspecialchars($m['last_price']); ?></span></td>
                                         <td><small><?php echo $m['last_checked'] ? date('d.m.Y H:i', strtotime($m['last_checked'])) : '-'; ?></small></td>
                                     </tr>
                                 <?php endforeach; ?>
                                 <?php if (empty($matches)): ?>
-                                    <tr><td colspan="4">Zatím nebyly nalezeny žádné výsledky. Spusťte <code>check.php</code>.</td></tr>
+                                    <tr><td colspan="5">Zatím nebyly nalezeny žádné výsledky. Spusťte <code>check.php</code>.</td></tr>
                                 <?php endif; ?>
                             </tbody>
                         </table>

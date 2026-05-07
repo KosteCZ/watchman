@@ -73,10 +73,11 @@ foreach ($products as $product) {
         $searchUrl = $store['search_url_template'] . urlencode($product['name']);
         echo "  - " . $store['name'] . ": ";
         
-        // 1. Find the match (Link, Title, Price)
+        // 1. Find the match (Link, Title, Price, Availability)
         $priceXpath = cssToXpath($store['price_selector']);
         $linkXpath = cssToXpath($store['link_selector']);
         $titleXpath = cssToXpath($store['title_selector']);
+        $availXpath = $store['availability_selector'] ? cssToXpath($store['availability_selector']) : null;
         
         // Fetch HTML once for all selectors would be better, but our fetchXpath fetches per call.
         // Let's optimize slightly by fetching the whole document once.
@@ -98,6 +99,7 @@ foreach ($products as $product) {
         $priceNode = $xpath->query($priceXpath)->item(0);
         $linkNode = $xpath->query($linkXpath)->item(0);
         $titleNode = $xpath->query($titleXpath)->item(0);
+        $availNode = $availXpath ? $xpath->query($availXpath)->item(0) : null;
         
         if ($priceNode && $linkNode && $titleNode) {
             $price = trim($priceNode->textContent);
@@ -107,6 +109,7 @@ foreach ($products as $product) {
             
             $title = trim($titleNode->textContent);
             $url = $linkNode->getAttribute('href');
+            $avail = $availNode ? trim($availNode->textContent) : 'Neznámá';
             
             // Handle relative URLs
             if (strpos($url, 'http') !== 0) {
@@ -115,7 +118,7 @@ foreach ($products as $product) {
                 $url = $base . (strpos($url, '/') === 0 ? '' : '/') . $url;
             }
             
-            echo "Found: $price ($title)\n";
+            echo "Found: $price ($title) - $avail\n";
             
             // Update or Insert match
             $stmt = $db->prepare("SELECT id FROM product_matches WHERE product_id = ? AND store_id = ?");
@@ -123,11 +126,11 @@ foreach ($products as $product) {
             $match = $stmt->fetch();
             
             if ($match) {
-                $stmt = $db->prepare("UPDATE product_matches SET found_title = ?, found_url = ?, last_price = ?, last_checked = CURRENT_TIMESTAMP WHERE id = ?");
-                $stmt->execute([$title, $url, $price, $match['id']]);
+                $stmt = $db->prepare("UPDATE product_matches SET found_title = ?, found_url = ?, last_price = ?, availability = ?, last_checked = CURRENT_TIMESTAMP WHERE id = ?");
+                $stmt->execute([$title, $url, $price, $avail, $match['id']]);
             } else {
-                $stmt = $db->prepare("INSERT INTO product_matches (product_id, store_id, found_title, found_url, last_price, last_checked) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)");
-                $stmt->execute([$product['id'], $store['id'], $title, $url, $price]);
+                $stmt = $db->prepare("INSERT INTO product_matches (product_id, store_id, found_title, found_url, last_price, availability, last_checked) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)");
+                $stmt->execute([$product['id'], $store['id'], $title, $url, $price, $avail]);
             }
         } else {
             if (!$priceNode) echo "Price not found. ";
