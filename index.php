@@ -35,8 +35,20 @@ $isAuthenticated = isset($_SESSION['user_id']);
         button { padding: 10px 20px; background: #007bff; color: #fff; border: none; border-radius: 4px; cursor: pointer; width: 100%; }
         .error { color: red; margin-bottom: 15px; font-size: 0.9em; }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+        .modal-content { background-color: #fefefe; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 600px; border-radius: 8px; }
+        .close { float: right; cursor: pointer; font-size: 28px; }
+    </style>
 </head>
 <body>
+    <div id="chartModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeChart()">&times;</span>
+            <canvas id="priceChart"></canvas>
+        </div>
+    </div>
     <div class="container">
         <?php if ($isAuthenticated): ?>
             <h1>Hlídač</h1>
@@ -100,7 +112,10 @@ $isAuthenticated = isset($_SESSION['user_id']);
                                         </td>
                                         <td><?php echo htmlspecialchars($m['availability']); ?></td>
                                         <td><span class="price"><?php echo htmlspecialchars($m['last_price']); ?></span></td>
-                                        <td><small><?php echo $m['last_checked'] ? date('d.m.Y H:i', strtotime($m['last_checked'] . ' UTC')) : '-'; ?></small></td>
+                                        <td>
+                                            <button onclick="showChart(<?php echo $m['product_id']; ?>, <?php echo $m['store_id']; ?>, '<?php echo htmlspecialchars($m['found_title']); ?>')">Graf</button>
+                                            <br><small><?php echo $m['last_checked'] ? date('d.m.Y H:i', strtotime($m['last_checked'] . ' UTC')) : '-'; ?></small>
+                                        </td>
                                     </tr>
                                 <?php endforeach; ?>
                                 <?php if (empty($matches)): ?>
@@ -135,6 +150,33 @@ $isAuthenticated = isset($_SESSION['user_id']);
     </div>
 
     <script>
+        let myChart;
+        async function showChart(productId, storeId, title) {
+            const res = await fetch(`api_price_history.php?product_id=${productId}&store_id=${storeId}`);
+            const data = await res.json();
+            
+            document.getElementById('chartModal').style.display = 'block';
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            
+            if (myChart) myChart.destroy();
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => d.check_date),
+                    datasets: [{ 
+                        label: 'Vývoj ceny: ' + title, 
+                        data: data.map(d => parseFloat(d.price)),
+                        borderColor: '#28a745',
+                        tension: 0.1
+                    }]
+                },
+                options: { responsive: true }
+            });
+        }
+        function closeChart() {
+            document.getElementById('chartModal').style.display = 'none';
+        }
+        
         if (document.getElementById('doLogin')) {
             document.getElementById('doLogin').onsubmit = async (e) => {
                 e.preventDefault();
