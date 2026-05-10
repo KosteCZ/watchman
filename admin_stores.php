@@ -36,26 +36,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $tSel = $_POST['title_selector'] ?? '';
         $aSel = $_POST['availability_selector'] ?? '';
         $iSel = $_POST['image_selector'] ?? '';
+        $role = $_SESSION['role'] ?? 'USER';
         
         $stmt = $db->prepare("SELECT user_id FROM stores WHERE id = ?");
         $stmt->execute([$id]);
         $store = $stmt->fetch();
-        if ($store && $store['user_id'] != 0 && $id && $name && $template) {
+        if ($store && ($store['user_id'] != 0 || $role === 'ADMIN') && $id && $name && $template) {
             updateStore($db, $id, $userId, $name, $template, $pSel, $lSel, $tSel, $aSel, $iSel);
             $message = 'Obchod byl upraven.';
-        } elseif ($store['user_id'] == 0) {
-            $message = 'Globální obchody nelze upravovat.';
+        } elseif ($store['user_id'] == 0 && $role !== 'ADMIN') {
+            $message = 'Globální obchody může upravovat pouze ADMIN.';
         }
     } elseif ($action === 'delete') {
         $id = $_POST['id'] ?? 0;
+        $role = $_SESSION['role'] ?? 'USER';
         $stmt = $db->prepare("SELECT user_id FROM stores WHERE id = ?");
         $stmt->execute([$id]);
         $store = $stmt->fetch();
-        if ($store && $store['user_id'] != 0) {
+        if ($store && ($store['user_id'] != 0 || $role === 'ADMIN')) {
             deleteStore($db, $id, $userId);
             $message = 'Obchod byl smazán.';
         } else {
-            $message = 'Globální obchody nelze mazat.';
+            $message = 'Globální obchody může mazat pouze ADMIN.';
         }
     }
 }

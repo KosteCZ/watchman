@@ -48,6 +48,7 @@ if ($action === 'login') {
     if ($user && password_verify($password, $user['password'])) {
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['player_name'] = $user['player_name'];
+        $_SESSION['role'] = $user['role'];
         
         // Update last login
         updateUserLastLogin($db, (int) $user['id'], date('Y-m-d H:i:s'));
