@@ -51,7 +51,7 @@ $db->exec("CREATE TABLE IF NOT EXISTS product_matches (
 
 // User helper functions
 function createUser($db, $email, $password, $playerName) {
-    $stmt = $db->prepare("INSERT INTO users (email, password, player_name) VALUES (?, ?, ?)");
+    $stmt = $db->prepare("INSERT INTO users (email, password, player_name, role) VALUES (?, ?, ?, 'USER')");
     $stmt->execute([$email, $password, $playerName]);
     return $db->lastInsertId();
 }
