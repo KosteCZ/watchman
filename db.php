@@ -69,7 +69,7 @@ function updateUserLastLogin($db, $userId, $lastLogin) {
 
 // Store management functions
 function getStores($db, $userId) {
-    $stmt = $db->prepare("SELECT * FROM stores WHERE user_id = ? ORDER BY name ASC");
+    $stmt = $db->prepare("SELECT * FROM stores WHERE user_id = ? OR user_id = 0 ORDER BY user_id ASC, name ASC");
     $stmt->execute([$userId]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }

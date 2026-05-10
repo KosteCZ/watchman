@@ -36,14 +36,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $tSel = $_POST['title_selector'] ?? '';
         $aSel = $_POST['availability_selector'] ?? '';
         $iSel = $_POST['image_selector'] ?? '';
-        if ($id && $name && $template) {
+        
+        $stmt = $db->prepare("SELECT user_id FROM stores WHERE id = ?");
+        $stmt->execute([$id]);
+        $store = $stmt->fetch();
+        if ($store && $store['user_id'] != 0 && $id && $name && $template) {
             updateStore($db, $id, $userId, $name, $template, $pSel, $lSel, $tSel, $aSel, $iSel);
             $message = 'Obchod byl upraven.';
+        } elseif ($store['user_id'] == 0) {
+            $message = 'Globální obchody nelze upravovat.';
         }
     } elseif ($action === 'delete') {
         $id = $_POST['id'] ?? 0;
-        deleteStore($db, $id, $userId);
-        $message = 'Obchod byl smazán.';
+        $stmt = $db->prepare("SELECT user_id FROM stores WHERE id = ?");
+        $stmt->execute([$id]);
+        $store = $stmt->fetch();
+        if ($store && $store['user_id'] != 0) {
+            deleteStore($db, $id, $userId);
+            $message = 'Obchod byl smazán.';
+        } else {
+            $message = 'Globální obchody nelze mazat.';
+        }
     }
 }
 
@@ -145,7 +158,8 @@ $stores = getStores($db, $userId);
                 <?php foreach ($stores as $s): ?>
                 <tr>
                     <td>
-                        <strong><?php echo htmlspecialchars($s['name']); ?></strong><br>
+                        <strong><?php echo htmlspecialchars($s['name']); ?></strong> 
+                        <?php if ($s['user_id'] == 0): ?><span style="background: #e2e3e5; padding: 2px 5px; font-size: 0.8em; border-radius: 3px;">Globální</span><?php endif; ?><br>
                         <small><code><?php echo htmlspecialchars($s['search_url_template']); ?></code></small>
                     </td>
                     <td>
