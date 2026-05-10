@@ -58,6 +58,9 @@ $products = getProducts($db, $userId);
             <a href="index.php">Dashboard</a>
             <a href="admin_products.php" style="color:#333">Produkty</a>
             <a href="admin_stores.php">Obchody</a>
+            <?php if (($_SESSION['role'] ?? '') === 'ADMIN'): ?>
+                <a href="admin_users.php">Uživatelé</a>
+            <?php endif; ?>
         </nav>
 
         <?php if ($message): ?>
