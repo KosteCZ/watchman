@@ -1,5 +1,6 @@
 <?php
 session_start();
+date_default_timezone_set('Europe/Prague');
 require_once 'db.php';
 
 $isAuthenticated = isset($_SESSION['user_id']);
