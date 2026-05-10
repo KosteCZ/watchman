@@ -74,14 +74,14 @@ function getStores($db, $userId) {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function addStore($db, $userId, $name, $template, $priceSel, $linkSel, $titleSel, $availSel) {
-    $stmt = $db->prepare("INSERT INTO stores (user_id, name, search_url_template, price_selector, link_selector, title_selector, availability_selector) VALUES (?, ?, ?, ?, ?, ?, ?)");
-    $stmt->execute([$userId, $name, $template, $priceSel, $linkSel, $titleSel, $availSel]);
+function addStore($db, $userId, $name, $template, $priceSel, $linkSel, $titleSel, $availSel, $imgSel) {
+    $stmt = $db->prepare("INSERT INTO stores (user_id, name, search_url_template, price_selector, link_selector, title_selector, availability_selector, image_selector) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->execute([$userId, $name, $template, $priceSel, $linkSel, $titleSel, $availSel, $imgSel]);
 }
 
-function updateStore($db, $id, $userId, $name, $template, $priceSel, $linkSel, $titleSel, $availSel) {
-    $stmt = $db->prepare("UPDATE stores SET name = ?, search_url_template = ?, price_selector = ?, link_selector = ?, title_selector = ?, availability_selector = ? WHERE id = ? AND user_id = ?");
-    $stmt->execute([$name, $template, $priceSel, $linkSel, $titleSel, $availSel, $id, $userId]);
+function updateStore($db, $id, $userId, $name, $template, $priceSel, $linkSel, $titleSel, $availSel, $imgSel) {
+    $stmt = $db->prepare("UPDATE stores SET name = ?, search_url_template = ?, price_selector = ?, link_selector = ?, title_selector = ?, availability_selector = ?, image_selector = ? WHERE id = ? AND user_id = ?");
+    $stmt->execute([$name, $template, $priceSel, $linkSel, $titleSel, $availSel, $imgSel, $id, $userId]);
 }
 
 function deleteStore($db, $id, $userId) {

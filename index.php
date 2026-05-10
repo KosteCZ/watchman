@@ -69,6 +69,7 @@ $isAuthenticated = isset($_SESSION['user_id']);
                         <table>
                             <thead>
                                 <tr>
+                                    <th>Obrázek</th>
                                     <th>Obchod</th>
                                     <th>Nalezený produkt</th>
                                     <th>Dostupnost</th>
@@ -79,6 +80,11 @@ $isAuthenticated = isset($_SESSION['user_id']);
                             <tbody>
                                 <?php foreach ($matches as $m): ?>
                                     <tr>
+                                        <td>
+                                            <?php if ($m['image_url']): ?>
+                                                <img src="<?php echo htmlspecialchars($m['image_url']); ?>" style="width:50px; height:auto;" alt="Product image">
+                                            <?php endif; ?>
+                                        </td>
                                         <td><span class="store-name"><?php echo htmlspecialchars($m['store_name']); ?></span></td>
                                         <td>
                                             <a href="<?php echo htmlspecialchars($m['found_url']); ?>" target="_blank" class="found-title">
@@ -91,7 +97,7 @@ $isAuthenticated = isset($_SESSION['user_id']);
                                     </tr>
                                 <?php endforeach; ?>
                                 <?php if (empty($matches)): ?>
-                                    <tr><td colspan="5">Zatím nebyly nalezeny žádné výsledky. Spusťte <code>check.php</code>.</td></tr>
+                                    <tr><td colspan="6">Zatím nebyly nalezeny žádné výsledky. Spusťte <code>check.php</code>.</td></tr>
                                 <?php endif; ?>
                             </tbody>
                         </table>

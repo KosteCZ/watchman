@@ -22,8 +22,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $lSel = $_POST['link_selector'] ?? '';
         $tSel = $_POST['title_selector'] ?? '';
         $aSel = $_POST['availability_selector'] ?? '';
+        $iSel = $_POST['image_selector'] ?? '';
         if ($name && $template) {
-            addStore($db, $userId, $name, $template, $pSel, $lSel, $tSel, $aSel);
+            addStore($db, $userId, $name, $template, $pSel, $lSel, $tSel, $aSel, $iSel);
             $message = 'Obchod byl přidán.';
         }
     } elseif ($action === 'update') {
@@ -34,8 +35,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $lSel = $_POST['link_selector'] ?? '';
         $tSel = $_POST['title_selector'] ?? '';
         $aSel = $_POST['availability_selector'] ?? '';
+        $iSel = $_POST['image_selector'] ?? '';
         if ($id && $name && $template) {
-            updateStore($db, $id, $userId, $name, $template, $pSel, $lSel, $tSel, $aSel);
+            updateStore($db, $id, $userId, $name, $template, $pSel, $lSel, $tSel, $aSel, $iSel);
             $message = 'Obchod byl upraven.';
         }
     } elseif ($action === 'delete') {
@@ -121,6 +123,10 @@ $stores = getStores($db, $userId);
                         <label>Selektor dostupnosti</label>
                         <input type="text" name="availability_selector" value="<?php echo htmlspecialchars($editStore['availability_selector'] ?? ''); ?>" placeholder=".stock">
                     </div>
+                    <div class="form-group" style="flex:1">
+                        <label>Selektor obrázku</label>
+                        <input type="text" name="image_selector" value="<?php echo htmlspecialchars($editStore['image_selector'] ?? ''); ?>" placeholder=".image img">
+                    </div>
                 </div>
                 <button type="submit" class="btn-primary"><?php echo $editStore ? 'Uložit změny' : 'Přidat obchod'; ?></button>
                 <?php if ($editStore): ?><a href="admin_stores.php">Zrušit</a><?php endif; ?>
@@ -146,7 +152,8 @@ $stores = getStores($db, $userId);
                         Cena: <code><?php echo htmlspecialchars($s['price_selector']); ?></code><br>
                         Odkaz: <code><?php echo htmlspecialchars($s['link_selector']); ?></code><br>
                         Název: <code><?php echo htmlspecialchars($s['title_selector']); ?></code><br>
-                        Dostupnost: <code><?php echo htmlspecialchars($s['availability_selector']); ?></code>
+                        Dostupnost: <code><?php echo htmlspecialchars($s['availability_selector']); ?></code><br>
+                        Obrázek: <code><?php echo htmlspecialchars($s['image_selector']); ?></code>
                     </td>
                     <td>
                         <a href="admin_stores.php?edit=<?php echo $s['id']; ?>" class="btn-warning">Upravit</a>
