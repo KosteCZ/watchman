@@ -44,6 +44,9 @@ $isAuthenticated = isset($_SESSION['user_id']);
                 <a href="index.php" style="color:#333">Dashboard</a>
                 <a href="admin_products.php">Produkty</a>
                 <a href="admin_stores.php">Obchody</a>
+                <?php if (($_SESSION['role'] ?? '') === 'ADMIN'): ?>
+                    <a href="admin_users.php">Uživatelé</a>
+                <?php endif; ?>
                 <span style="float:right;">
                     <small>Přihlášen jako: <strong><?php echo htmlspecialchars($_SESSION['player_name']); ?><?php if (($_SESSION['role'] ?? '') === 'ADMIN') echo ' (ADMIN)'; ?></strong></small> | 
                     <a href="#" id="logoutBtn" style="color:#dc3545">Odhlásit se</a>
