@@ -94,7 +94,7 @@ $isAuthenticated = isset($_SESSION['user_id']);
                                         </td>
                                         <td><?php echo htmlspecialchars($m['availability']); ?></td>
                                         <td><span class="price"><?php echo htmlspecialchars($m['last_price']); ?></span></td>
-                                        <td><small><?php echo $m['last_checked'] ? date('d.m.Y H:i', strtotime($m['last_checked'])) : '-'; ?></small></td>
+                                        <td><small><?php echo $m['last_checked'] ? date('d.m.Y H:i', strtotime($m['last_checked'] . ' UTC')) : '-'; ?></small></td>
                                     </tr>
                                 <?php endforeach; ?>
                                 <?php if (empty($matches)): ?>
