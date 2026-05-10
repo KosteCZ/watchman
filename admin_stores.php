@@ -175,12 +175,16 @@ $stores = getStores($db, $userId);
                         Obrázek: <code><?php echo htmlspecialchars($s['image_selector']); ?></code>
                     </td>
                     <td>
-                        <a href="admin_stores.php?edit=<?php echo $s['id']; ?>" class="btn-warning">Upravit</a>
-                        <form method="POST" style="display:inline;" onsubmit="return confirm('Smazat obchod a všechny jeho výsledky?');">
-                            <input type="hidden" name="action" value="delete">
-                            <input type="hidden" name="id" value="<?php echo $s['id']; ?>">
-                            <button type="submit" class="btn-danger">Smazat</button>
-                        </form>
+                        <?php if ($s['user_id'] != 0 || ($_SESSION['role'] ?? '') === 'ADMIN'): ?>
+                            <a href="admin_stores.php?edit=<?php echo $s['id']; ?>" class="btn-warning">Upravit</a>
+                            <form method="POST" style="display:inline;" onsubmit="return confirm('Smazat obchod a všechny jeho výsledky?');">
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="id" value="<?php echo $s['id']; ?>">
+                                <button type="submit" class="btn-danger">Smazat</button>
+                            </form>
+                        <?php else: ?>
+                            <small style="color: #666;">Pouze pro ADMIN</small>
+                        <?php endif; ?>
                     </td>
                 </tr>
                 <?php endforeach; ?>
