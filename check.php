@@ -137,7 +137,7 @@ foreach ($products as $product) {
             
             echo "Found: $price ($title) - $avail\n";
             
-            // Update or Insert match
+            // 1. Update/Insert into matches
             $stmt = $db->prepare("SELECT id FROM product_matches WHERE product_id = ? AND store_id = ?");
             $stmt->execute([$product['id'], $store['id']]);
             $match = $stmt->fetch();
@@ -149,6 +149,11 @@ foreach ($products as $product) {
                 $stmt = $db->prepare("INSERT INTO product_matches (product_id, store_id, found_title, found_url, last_price, availability, image_url, last_checked) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)");
                 $stmt->execute([$product['id'], $store['id'], $title, $url, $price, $avail, $img]);
             }
+
+            // 2. Log to price_history (daily)
+            $today = date('Y-m-d');
+            $stmt = $db->prepare("INSERT OR REPLACE INTO price_history (product_id, store_id, price, check_date) VALUES (?, ?, ?, ?)");
+            $stmt->execute([$product['id'], $store['id'], $price, $today]);
         } else {
             if (!$priceNode) echo "Price not found. ";
             if (!$linkNode) echo "Link not found. ";
