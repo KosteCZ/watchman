@@ -153,7 +153,15 @@ $isAuthenticated = isset($_SESSION['user_id']);
         let myChart;
         async function showChart(productId, storeId, title) {
             const res = await fetch(`api_price_history.php?product_id=${productId}&store_id=${storeId}`);
-            const data = await res.json();
+            const rawData = await res.text();
+            
+            // WebZdarma injects ad HTML before/after JSON, we need to extract the JSON part
+            const jsonMatch = rawData.match(/\[.*\]/);
+            if (!jsonMatch) {
+                alert("Nepodařilo se načíst data grafu (chyba formátu).");
+                return;
+            }
+            const data = JSON.parse(jsonMatch[0]);
             
             document.getElementById('chartModal').style.display = 'block';
             const ctx = document.getElementById('priceChart').getContext('2d');
