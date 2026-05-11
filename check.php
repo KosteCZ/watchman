@@ -2,23 +2,26 @@
 // check.php - Multi-Store Search Engine
 require_once 'db.php';
 
-function fetchXpath($url, $xpathSelector) {
-    $urlEscaped = escapeshellarg($url);
+function fetchUrl($url) {
     $userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
-    $command = "curl.exe -s -L -A " . escapeshellarg($userAgent) . " " . $urlEscaped;
     
-    $html = shell_exec($command);
-    if (!$html) return null;
-
-    $dom = new DOMDocument();
-    @$dom->loadHTML('<?xml encoding="UTF-8">' . $html);
-    $xpath = new DOMXPath($dom);
-
-    $nodes = $xpath->query($xpathSelector);
-    if ($nodes && $nodes->length > 0) {
-        return $nodes->item(0);
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_USERAGENT, $userAgent);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Někdy nutné na starších hostingových konfiguracích
+    
+    $html = curl_exec($ch);
+    $error = curl_error($ch);
+    curl_close($ch);
+    
+    if (!$html) {
+        return null;
     }
-    return null;
+    return $html;
 }
 
 function cssToXpath($selector) {
@@ -80,12 +83,8 @@ foreach ($products as $product) {
         $availXpath = $store['availability_selector'] ? cssToXpath($store['availability_selector']) : null;
         $imgXpath = $store['image_selector'] ? cssToXpath($store['image_selector']) : null;
         
-        // Fetch HTML once for all selectors would be better, but our fetchXpath fetches per call.
-        // Let's optimize slightly by fetching the whole document once.
-        $userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
-        // On Windows, escapeshellarg strips % from URLs. Using manual quoting instead.
-        $command = "curl.exe -s -L --connect-timeout 10 --max-time 30 -A " . escapeshellarg($userAgent) . " \"" . $searchUrl . "\"";
-        $html = shell_exec($command);
+        // Fetch HTML
+        $html = fetchUrl($searchUrl);
         
         if (!$html) {
             // Check if it's really empty or if there was an error
