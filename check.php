@@ -62,7 +62,7 @@ function cssToXpath($selector) {
 $products = $db->query("SELECT * FROM products WHERE active = 1")->fetchAll(PDO::FETCH_ASSOC);
 $stores = $db->query("SELECT * FROM stores")->fetchAll(PDO::FETCH_ASSOC);
 
-echo "[" . date('Y-m-d H:i:s') . "] Starting discovery for " . count($products) . " products across " . count($stores) . " stores...\n";
+echo "[" . date('Y-m-d H:i:s') . " UTC] Starting discovery for " . count($products) . " products across " . count($stores) . " stores...\n";
 
 $pCount = 0;
 foreach ($products as $product) {
