@@ -140,11 +140,26 @@ $isAuthenticated = isset($_SESSION['user_id']);
                         <label>Heslo</label>
                         <input type="password" name="password" required>
                     </div>
-                    <button type="submit">Přihlásit se</button>
+                    <button type="submit" id="loginBtn">Přihlásit se</button>
+                    <button type="button" id="toggleRegBtn" style="background:#6c757d; margin-top:10px;">Registrovat se</button>
                 </form>
-                <p style="text-align:center; margin-top:20px; font-size:0.9em;">
-                    Nemáte účet? <a href="#" onclick="alert('Registrace je v této verzi možná pouze přes auth.php nebo ručně v DB.')">Kontaktujte správce</a>
-                </p>
+
+                <form id="doRegister" style="display:none;">
+                    <div class="form-group">
+                        <label>Jméno</label>
+                        <input type="text" name="playerName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>E-mail</label>
+                        <input type="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Heslo</label>
+                        <input type="password" name="password" required>
+                    </div>
+                    <button type="submit" style="background:#28a745;">Registrovat se</button>
+                    <button type="button" id="toggleLoginBtn" style="background:#6c757d; margin-top:10px;">Zpět k přihlášení</button>
+                </form>
             </div>
         <?php endif; ?>
     </div>
@@ -186,10 +201,28 @@ $isAuthenticated = isset($_SESSION['user_id']);
         }
         
         if (document.getElementById('doLogin')) {
+            document.getElementById('toggleRegBtn').onclick = () => {
+                document.getElementById('doLogin').style.display = 'none';
+                document.getElementById('doRegister').style.display = 'block';
+            };
+            document.getElementById('toggleLoginBtn').onclick = () => {
+                document.getElementById('doLogin').style.display = 'block';
+                document.getElementById('doRegister').style.display = 'none';
+            };
+
             document.getElementById('doLogin').onsubmit = async (e) => {
                 e.preventDefault();
                 const formData = new FormData(e.target);
                 const res = await fetch('auth.php?action=login', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.success) location.reload();
+                else document.getElementById('loginError').innerText = data.error;
+            };
+
+            document.getElementById('doRegister').onsubmit = async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const res = await fetch('auth.php?action=register', { method: 'POST', body: formData });
                 const data = await res.json();
                 if (data.success) location.reload();
                 else document.getElementById('loginError').innerText = data.error;
