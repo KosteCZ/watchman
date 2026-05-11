@@ -16,7 +16,6 @@ function fetchUrl($url) {
     
     $html = curl_exec($ch);
     $error = curl_error($ch);
-    curl_close($ch);
     
     if (!$html) {
         return null;
