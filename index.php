@@ -40,6 +40,17 @@ $isAuthenticated = isset($_SESSION['user_id']);
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
         .modal-content { background-color: #fefefe; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 600px; border-radius: 8px; }
         .close { float: right; cursor: pointer; font-size: 28px; }
+        .desktop-only { display: table-row; }
+        .mobile-only { display: none; }
+        @media (max-width: 600px) {
+            .desktop-only { display: none; }
+            .mobile-only { display: block; }
+            .product-card table { display: none; }
+            .match-card { border-bottom: 1px solid #eee; padding: 10px; display: flex; align-items: center; }
+            .match-card img { width: 60px; height: auto; margin-right: 15px; }
+            .match-info { flex-grow: 1; }
+            .match-price { font-weight: bold; color: #28a745; display: block; }
+        }
     </style>
 </head>
 <body>
@@ -73,7 +84,6 @@ $isAuthenticated = isset($_SESSION['user_id']);
                 <?php else: 
                     foreach ($products as $p): 
                         $matches = getProductMatches($db, $p['id']);
-                        // Sort matches by price (basic numeric extraction)
                         usort($matches, function($a, $b) {
                             $pa = (float) preg_replace('/[^0-9.]/', '', str_replace(',', '.', $a['last_price']));
                             $pb = (float) preg_replace('/[^0-9.]/', '', str_replace(',', '.', $b['last_price']));
@@ -85,6 +95,8 @@ $isAuthenticated = isset($_SESSION['user_id']);
                             <h2><?php echo htmlspecialchars($p['name']); ?></h2>
                             <small>Sledováno v <?php echo count($matches); ?> obchodech</small>
                         </div>
+                        
+                        <!-- Desktop Table -->
                         <table>
                             <thead>
                                 <tr>
@@ -118,11 +130,29 @@ $isAuthenticated = isset($_SESSION['user_id']);
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
-                                <?php if (empty($matches)): ?>
-                                    <tr><td colspan="6">Zatím nebyly nalezeny žádné výsledky. Spusťte <code>check.php</code>.</td></tr>
-                                <?php endif; ?>
                             </tbody>
                         </table>
+
+                        <!-- Mobile Cards -->
+                        <div class="mobile-only">
+                            <?php foreach ($matches as $m): ?>
+                                <div class="match-card">
+                                    <?php if ($m['image_url']): ?>
+                                        <img src="<?php echo htmlspecialchars($m['image_url']); ?>" alt="Product image">
+                                    <?php endif; ?>
+                                    <div class="match-info">
+                                        <strong><?php echo htmlspecialchars($m['store_name']); ?></strong><br>
+                                        <a href="<?php echo htmlspecialchars($m['found_url']); ?>" target="_blank"><?php echo htmlspecialchars($m['found_title']); ?></a><br>
+                                        <small><?php echo htmlspecialchars($m['availability']); ?></small>
+                                        <span class="match-price"><?php echo htmlspecialchars($m['last_price']); ?></span>
+                                        <button onclick="showChart(<?php echo $m['product_id']; ?>, <?php echo $m['store_id']; ?>, '<?php echo htmlspecialchars($m['found_title']); ?>')">Graf</button>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                        <?php if (empty($matches)): ?>
+                            <p style="padding:15px;">Zatím nebyly nalezeny žádné výsledky. Spusťte <code>check.php</code>.</p>
+                        <?php endif; ?>
                     </div>
                 <?php endforeach; endif; ?>
             </div>
